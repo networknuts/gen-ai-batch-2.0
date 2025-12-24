@@ -1,5 +1,5 @@
 services:
-  vector_database:
+  vector-db:
     image: docker.io/qdrant/qdrant:latest
     ports:
       - 6333:6333
