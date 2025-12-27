@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: query
+  namespace: rag-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: query
+  template:
+    metadata:
+      labels:
+        app: query
+    spec:
+      containers:
+        - name: query
+          image: docker.io/aryansr/rag-microservice-app_query:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: QDRANT_URL
+              value: http://qdrant:6333
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: openai-secret
+                  key: api-key
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: query
+  namespace: rag-app
+spec:
+  selector:
+    app: query
+  ports:
+    - port: 8000
+      targetPort: 8000
