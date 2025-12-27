@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ingestor
+  namespace: rag-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ingestor
+  template:
+    metadata:
+      labels:
+        app: ingestor
+    spec:
+      containers:
+        - name: ingestor
+          image: docker.io/aryansr/rag-microservice-app_ingestor:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: QDRANT_URL
+              value: http://qdrant:6333
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: openai-secret
+                  key: api-key
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ingestor
+  namespace: rag-app
+spec:
+  selector:
+    app: ingestor
+  ports:
+    - port: 8000
+      targetPort: 8000
