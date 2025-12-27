@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: rag-ui
-          image: docker.io/aryansr/rag-microservice-app_ui:latest
+          image: ddocker.io/aryansr/rag-app-react-gui:latest
           ports:
             - containerPort: 80
 ---
