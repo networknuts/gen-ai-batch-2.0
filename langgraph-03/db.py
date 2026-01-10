@@ -23,14 +23,24 @@ def save_message(thread_id: str, role: str, content: str):
 # Load full chat history
 # ----------------------------------
 def load_history(thread_id: str):
+    # Step 1: Query MongoDB for all messages of this thread
     cursor = collection.find(
         {"thread_id": thread_id}
-    ).sort("timestamp", 1)
+    )
 
-    return [
-        {
+    # Step 2: Sort messages by time (oldest → newest)
+    cursor = cursor.sort("timestamp", 1)
+
+    # Step 3: Prepare a list to store cleaned messages
+    history = []
+
+    # Step 4: Iterate over each document from MongoDB
+    for doc in cursor:
+        message = {
             "role": doc["role"],
             "content": doc["content"]
         }
-        for doc in cursor
-    ]
+        history.append(message)
+
+    # Step 5: Return the full conversation history
+    return history
