@@ -68,10 +68,21 @@ def chat():
             user_id=user_id
         )
 
-        memories = [
-            mem["memory"]
-            for mem in relevant_memories.get("results", [])
-        ]
+        # Get the list of memory search results
+        results = relevant_memories.get("results", [])
+        
+        # Create an empty list to store extracted memories
+        memories = []
+        
+        # Loop through each memory result
+        for item in results:
+            # Extract the actual memory text
+            memory_text = item.get("memory")
+        
+            # Add it to the memories list
+            if memory_text is not None:
+                memories.append(memory_text)
+
 
         system_prompt = f"""
 You are a memory-aware assistant.
