@@ -1,6 +1,27 @@
 from langgraph.checkpoint.mongodb import MongoDBSaver
 from graph import build_graph
 from config import DB_URI, GRAPH_CONFIG
+import time
+
+def poll_for_human_response(graph, config, poll_interval=2):
+    """
+    Poll MongoDB until the graph reaches END after human resume.
+    """
+    print("Waiting for human response...")
+
+    while True:
+        state = graph.get_state(config=config)
+
+        # LangGraph marks completion when next node is END
+        if state.next is None:
+            messages = state.values.get("messages", [])
+            if messages:
+                print("\n--- Response from Support ---")
+                messages[-1].pretty_print()
+            return
+
+        time.sleep(poll_interval)
+
 
 
 def customer_chat():
