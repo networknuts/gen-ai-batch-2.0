@@ -31,3 +31,6 @@ def human_support_console():
         for event in graph.stream(resume_cmd, GRAPH_CONFIG, stream_mode="values"):
             if "messages" in event:
                 event["messages"][-1].pretty_print()
+
+
+human_support_console()
