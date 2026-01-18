@@ -1,7 +1,9 @@
 from dotenv import load_dotenv
-from typing import List, Dict
+from typing import List
 
 from mcp.server.fastmcp import FastMCP
+from mcp.types import TextContent
+
 from langchain_qdrant import QdrantVectorStore
 from langchain_openai import OpenAIEmbeddings
 
@@ -11,51 +13,54 @@ from langchain_openai import OpenAIEmbeddings
 load_dotenv()
 
 # ---------------------------------------------------------
-# MCP Server
+# FastMCP Server
 # ---------------------------------------------------------
 mcp = FastMCP("RAG-MCP-Server")
 
 # ---------------------------------------------------------
-# Embedding Model (same as your original)
+# Embedding Model
 # ---------------------------------------------------------
 embedding_model = OpenAIEmbeddings(
     model="text-embedding-3-large"
 )
 
 # ---------------------------------------------------------
-# Qdrant Connection (same as your original)
+# Qdrant Connection
 # ---------------------------------------------------------
 vector_db = QdrantVectorStore.from_existing_collection(
     url="http://localhost:6333",
     collection_name="learning_vectors",
     embedding=embedding_model
 )
-
+print(vector_db.client.get_collection("learning_vectors"))
 # ---------------------------------------------------------
-# MCP Tool: RAG Search
+# MCP Tool: RAG Search (FIXED)
 # ---------------------------------------------------------
 @mcp.tool()
-def rag_search(query: str, top_k: int = 4) -> List[Dict]:
+def rag_search(query: str):
     """
     Perform similarity search over the document corpus.
+    Returns MCP-native TextContent blocks.
     """
-    results = vector_db.similarity_search(query=query, k=top_k)
+    search_results = vector_db.similarity_search(query=query)
+    context_blocks = []
 
-    chunks = []
-    for r in results:
-        chunks.append({
-            "content": r.page_content,
-            "page": r.metadata.get("page_label", "N/A"),
-            "source": r.metadata.get("source", "N/A"),
-        })
+    for result in search_results:
+        block = f"""
+    Page Content:
+    {result.page_content}
 
-    return chunks
+    Page Number: {result.metadata.get("page_label", "N/A")}
+    Source File: {result.metadata.get("source", "N/A")}
+    """
+    context_blocks.append(block.strip())
 
+    context = "\n\n---\n\n".join(context_blocks)
+    return context
 
+    
+# ---------------------------------------------------------
+# Run Server
+# ---------------------------------------------------------
 if __name__ == "__main__":
-    # Serve MCP over HTTP so multiple agents can connect
-    mcp.run(
-        transport="http",
-        host="0.0.0.0",
-        port=8000
-    )
+    mcp.run(transport="streamable-http")
