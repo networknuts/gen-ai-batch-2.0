@@ -1,33 +1,40 @@
-# summarize.py
 from openai import OpenAI
 
 client = OpenAI()
 
-def summarize(notes):
-    prompt = f"""
-You are a meeting assistant.
+SYSTEM_PROMPT_FILE = "system_prompt.txt"
 
-Summarize the meeting notes below.
-Extract:
-- Key discussion points
-- Decisions
-- Action items
 
+def load_system_prompt(path: str) -> str:
+    with open(path, "r", encoding="utf-8") as f:
+        return f.read().strip()
+
+
+def summarize(notes: str, system_prompt: str) -> str:
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {
+                "role": "user",
+                "content": f"""
 Meeting Notes:
 {notes}
 """
-
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}]
+            }
+        ]
     )
 
     return response.choices[0].message.content
 
+
 if __name__ == "__main__":
-    with open("meeting_notes.txt") as f:
+    with open("meeting_notes.txt", "r", encoding="utf-8") as f:
         notes = f.read()
 
-    summary = summarize(notes)
-    print("\n📝 MEETING SUMMARY\n")
+    system_prompt = load_system_prompt(SYSTEM_PROMPT_FILE)
+
+    summary = summarize(notes, system_prompt)
+
+    print("\nMEETING SUMMARY\n")
     print(summary)
